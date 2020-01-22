@@ -3,9 +3,9 @@
 # And-Or Shape (aos) Language
 
 
-Writing data pipelines involves doing complex data transformations over nested data, e.g., list of dictionaries or dictionary of tensors. 
+Writing data pipelines involves complex data transformations over nested data, e.g., list of dictionaries or dictionary of tensors. 
 
-- The **shape** of nested data is not explicit in code and hence not accessible readily to the developer.
+- The *shape* of nested data is not explicit in code and hence not accessible readily to the developer.
 - Leads to cognitive burden (guessing shapes), technical debt and inadvertent programming errors.
 - Data pipelines are very opaque to examination and comprehension.
 
@@ -23,7 +23,9 @@ Writing data pipelines involves doing complex data transformations over nested d
 
   
 
-### Shape of Data ?
+## Shape of Data ?
+
+How can we specify the structure of data compactly?
 
 - for scalar data, its shape is simply its type, e.g., `int`, ` float`, `str`, ...
 - for nested data, eg.  list of `int`s:  `(int)*`
@@ -36,30 +38,31 @@ We can describe shape of arbitrary, nested data with these `&`(and)- `|`(or) exp
 * In contrast, an n-dimensional `tensor` has an `and`-shape: we must choose indices from *all* the dimensions of the tensor to *access* a scalar value. 
 * In general, for a data structure, we *ask*: what are the access paths to get to a scalar value?
 
-Thinking in terms of `and`-`or` shapes takes a bit of practice but proves to be very useful in making hidden shapes explicit. Read more about how to think in the and-or style [here](and-or-thinking.md).
+Thinking in terms of `and`-`or` shapes takes a bit of practice but proves to be very useful in making hidden shapes explicit. Read more about how to think in the and-or style [here](docs/and-or-thinking.md).
 
-#### `aos` Expressions
+#### More `aos` Examples
 
-Lists over shape `s` are denoted as `(s)*`. 
-Dictionary: `(k1 & v1) | (k2 & v2) | ... | (kn & vn)` where `ki` and `vi` is the `i`th key and value.
+* Lists over shape `s` are denoted as `(s)*`. 
+* Dictionary: `(k1 & v1) | (k2 & v2) | ... | (kn & vn)` where `ki` and `vi` is the `i`th key and value.
+* Pandas tables: `(n & (c1|c2|...|cn))` where `n` is the row dimension (the number of rows) and `c1,...,cn` are column names.
 
-Pandas tables: `(n & (c1|c2|...|cn))` where `n` is the row dimension (the number of rows) and `c1,...,cn` are column names.
-
-The `aos` expressions let you write object shapes very *compactly* . For example, consider a highly nested Python object `O` of type
+The `aos` expressions let you write object shapes very *compactly*. For example, consider a highly nested Python object `X` of type
 
  `Sequence[Tuple[Tuple[str, int], Dict[str, str]]]`  
 
- `O`'s `aos` is simply`((str|int)|(str : str))* `.
+which is hard to interpret. Instead, `X`'s `aos` is written compactly as `((str|int)|(str : str))* `.
 
- Writing full shapes of data variables may get cumbersome. The language supports wildcards: `_` and `...` which represent a single dimension name or an arbitrary shape, respectively.
+> Writing full shapes of data variables may get cumbersome. To keep it brief, the language supports wildcards: `_` and `...` . 
+>
+> So, we could write a dictionary's shape as `(k1 & ...)| ... | (kn & ...)`.
 
-So, we could write a dictionary's shape as `(k1 & ...)| ... | (kn & ...)`.
 
-### Shape Validation Examples
+
+## Shape Validation Examples
 
 Using `aos.is_aos_shape`, we can write `aos` assertions to validate data shapes. 
 
-* The language allows *lazy* shape specifications using placeholders:  `_` matches a scalar, `...` matches an arbitrary object.
+The language allows *lazy* shape specifications using placeholders:  `_` matches a scalar, `...` matches an arbitrary object.
 
 ```python
 from aos import is_aos_shape
@@ -99,14 +102,14 @@ def test_pytorch():
 
 
 
-### And-Or Shape Dimensions
+## And-Or Shape Dimensions
 
-The above examples of use type names (`str`) or integer values in shapes. A more principled approach is to first declare `dimension` names and define shape over these names. 
+The above examples of use type names (`str`) or integer values (`2`,`3`) in shapes. A more principled approach is to first declare **dimension names** and define shape over these names. 
 
-Data is defined over two broad types of dimensions
+Data is defined over two kinds of dimensions:
 
-* Continuous Dimensions. Think of a range of values, e.g., a numpy array of shape (5, 200) is defined over two continuous dimensions, say `n` and `d`, where `n` ranges over values `0-4` and `d` ranges over `0-199`.
-* Categorical Dimensions. A set of names, e.g., a dictionary `{'a': 4, 'b': 5}` is defined over names `['a', 'b']`. One can view each key, e.g., `a` or `b` as a Singleton dimension.
+* **Continuous**. Think of a range of values, e.g., a numpy array of shape (5, 200) is defined over two continuous dimensions, say `n` and `d`, where `n` ranges over values `0-4` and `d` ranges over `0-199`.
+* **Categorical**. A set of names, e.g., a dictionary `{'a': 4, 'b': 5}` is defined over keys aka dim names `['a', 'b']`. One can also view each key, e.g., `a` or `b` , as a **Singleton** dimension.
 
 
 

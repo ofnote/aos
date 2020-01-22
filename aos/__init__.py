@@ -1,0 +1,1 @@
+from checker import is_aos_shape

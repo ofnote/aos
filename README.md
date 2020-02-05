@@ -21,7 +21,8 @@ Writing data pipelines involves complex data transformations over nested data, e
 
 * Write shapes for a variety of data conveniently -- Python native objects, tensors (`numpy`,` pytorch`, `tf`), `pandas`,`hdf5`,`tiledb`,`xarray`,`struct-tensor`, etc.
 
-  
+
+```pip install aos```
 
 ## Shape of Data ?
 
@@ -31,10 +32,12 @@ How can we specify the structure of data compactly?
 - for nested data, eg.  list of `int`s:  `(int)*`
 - for a dictionary of form `{'a': 3, b: 'hi'}` : shape is  `(a & int) | (b & str)`.
 
-We can describe shape of arbitrary, nested data with these `&`(and)- `|`(or) expressions. A list is an `or`-structure, a dictionary is an `or` of `and`s, a tensor is an `and`-structure, and so on.
+We can describe shape of *arbitrary, nested* data with these `&`(and)- `|`(or) expressions. 
+
+A list is an `or`-structure, a dictionary is an `or` of `and`s, a tensor is an `and`-structure, and so on.
 
 * Why is a `list` an or-structure? Think of how do we *access* a scalar value in the `list`. We need to pick **some** value from its indices to get to a value. 
-* Similarly, a `dictionary` is an or-structure: pick **one** of its keys to access the *sub-tree* values.
+* Similarly, a `dictionary` is an or-and-structure: pick **one** of its keys to access the *sub-tree* values. In fact, we pick both the *key* **and** *value* together.
 * In contrast, an n-dimensional `tensor` has an `and`-shape: we must choose indices from *all* the dimensions of the tensor to *access* a scalar value. 
 * In general, for a data structure, we *ask*: what are the access paths to get to a scalar value?
 
@@ -42,7 +45,7 @@ Thinking in terms of `and`-`or` shapes takes a bit of practice but proves to be 
 
 #### More `aos` Examples
 
-* Lists over shape `s` are denoted as `(s)*`. 
+* Lists over shape `s` are denoted as `(s)*`.  Shorthand for `(s|..|s)`.
 * Dictionary: `(k1 & v1) | (k2 & v2) | ... | (kn & vn)` where `ki` and `vi` is the `i`th key and value.
 * Pandas tables: `(n & (c1|c2|...|cn))` where `n` is the row dimension (the number of rows) and `c1,...,cn` are column names.
 
@@ -50,7 +53,7 @@ The `aos` expressions let you write object shapes very *compactly*. For example,
 
  `Sequence[Tuple[Tuple[str, int], Dict[str, str]]]`  
 
-which is hard to interpret. Instead, `X`'s `aos` is written compactly as `((str|int)|(str : str))* `.
+This is both verbose and hard to interpret. Instead, `X`'s `aos` is written compactly as `((str|int) | (str : str))* `.
 
 > Writing full shapes of data variables may get cumbersome. To keep it brief, the language supports wildcards: `_` and `...` . 
 >
@@ -117,7 +120,7 @@ The library provides an API to declare both type of dimensions and `aos` express
 
 
 
-*Examples coming soon...*
+*More details coming soon...*
 
 
 

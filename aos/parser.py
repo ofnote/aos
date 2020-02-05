@@ -31,7 +31,7 @@ AOS_Grammar = Grammar(
 
 
 
-from aos import get_or_decl_dim, AOShape
+from .aos import get_or_decl_dim, AOShape
 
 class AosVisitor(NodeVisitor):
 

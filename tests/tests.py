@@ -1,4 +1,4 @@
-from checker import is_aos_shape
+from aos.checker import is_aos_shape
 
 
 
@@ -45,10 +45,10 @@ if __name__ == '__main__':
     import numpy as np
     import torch
     
-    #test_pyds()
+    test_pyds()
     test_pandas()
-    #test_numpy()
-    #test_pytorch()
+    test_numpy()
+    test_pytorch()
 
 
 

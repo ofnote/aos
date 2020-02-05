@@ -1,12 +1,12 @@
 import sys
 from itertools import chain
 
-from parser import parse_aos
-from aos import AOShape, AOop, AOConst
-from aos import DimSymbol, ContinuousDim, CategoricalDim, Dim
-from aos import AndTuple
-from type_matchers import OrList, AndMatcher
-from utils import apply_match
+from .parser import parse_aos
+from .aos import AOShape, AOop, AOConst
+from .aos import DimSymbol, ContinuousDim, CategoricalDim, Dim
+from .aos import AndTuple
+from .type_matchers import OrList, AndMatcher
+from .utils import apply_match
 
 DEBUG = False
 

@@ -1,4 +1,4 @@
-from aos import AndTuple
+from .aos import AndTuple
 from itertools import chain
 
 class OrList():
@@ -81,7 +81,7 @@ class AndMatcher():
 
     def for_ndarray(arr, shape_args, **kwargs):
         res, err = None, None
-        shape = arr.size()
+        shape = arr.shape
         #print(f'{arr.shape}, {shape_args}')
         if len(shape) != len(shape_args):
             err = f'mismatch: shape {shape} against args {shape_args}'

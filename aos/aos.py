@@ -38,6 +38,7 @@ class DimSymbol():
         self.fullname = fullname
         DimSymbol._declare(self)
 
+
     @property
     def longname(self):
         res = '' if self.fullname is None else self.fullname
@@ -179,6 +180,10 @@ class AOShape(NamedTuple):
     ',': AOop.COMMA,
     '*': AOop.SEQUENCE
     }
+
+    def get_dim_name(self):
+        assert self.dim is not None
+        return self.dim.name.strip()
 
     @staticmethod
     def build_from(op, args):

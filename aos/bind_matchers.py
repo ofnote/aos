@@ -4,7 +4,7 @@ from .aos import AndTuple, AOop
 from .common import DEBUG
 
 
-class AndBinder():
+class AndSplitter():
     def for_dict(obj, shape, **kwargs):
         res, err = None, None
         shape_args = shape.args
@@ -31,7 +31,7 @@ class AndBinder():
     }
 
 
-class OrBinder():
+class OrSplitter():
     '''
     convert an or-like object into a list of objects
     '''
@@ -44,10 +44,13 @@ class OrBinder():
         err = f'mismatch: cannot convert AndTuple to Or-shape {obj}, {shape}'
         return None, err
 
+
     def from_dict(obj, shape, **kwargs):
         #convert into a list of AND types (ANDtuple)
-        items = [AndTuple(x) for x in obj.items()]
-        return items, None
+        pairs = [(obj, x) for x in shape.args] #try to bind each OR arg with dict
+        #pairs = [(AndTuple(x), shape) for x in obj.items()] #try to bind 
+        #res = [get_bind_candidates(items, shape) for arg in shape.args]
+        return pairs, None
     def default_func(arr):
         err = f'mismatch: expected list or dict: unknown arr type {type(obj)}'
         return None, err
@@ -59,7 +62,7 @@ class OrBinder():
         dict: from_dict
     }
 
-class SeqBinder():
+class SeqSplitter():
     def from_list(obj, shape, **kwargs):
         res, err = None, None
         shape_args = shape.args
@@ -79,7 +82,7 @@ def bind_dim(obj, shape):
 
     err = None
     if DEBUG: print (f'bind_dim: dname = {dim_name}, {type(dim_name)}, {obj}')
-    return [(dim_name, obj)], err
+    return [{dim_name: obj}], err
 
 
 def get_bind_candidates(obj, shape):
@@ -88,18 +91,34 @@ def get_bind_candidates(obj, shape):
     '''
     res, err = None, None
     op = shape.op
-    if DEBUG: print(f'get_bind_candidates: {op}, {obj}, {shape}')
+    if DEBUG: print(f'\nget_bind_candidates: {op}, {obj}, {shape}')
     if op == AOop.OR:
-        res, err = apply_match(OrBinder, obj, shape)
+        res, err = apply_match(OrSplitter, obj, shape)
     elif op == AOop.AND:
-        res, err = apply_match(AndBinder, obj, shape)
+        res, err = apply_match(AndSplitter, obj, shape)
     elif op == AOop.SEQUENCE:
-        res, err = apply_match(SeqBinder, obj, shape)
+        res, err = apply_match(SeqSplitter, obj, shape)
     else:
         raise NotImplementedError(f'op: {op}, shape: {shape}')
 
     if DEBUG: print (f'< get_bind_candidates: {res}, {err}')
     return res, err
+
+def combiner(ctx: 'list', shape):
+    assert shape.op is not None
+    res = None
+    if shape.op == AOop.OR:
+        or_dict = {}
+        for d in ctx: or_dict.update(d)
+        res = [or_dict]
+    elif shape.op == AOop.AND:
+        res = ctx
+        #raise NotImplementedError(f'{ctx}, {shape}')
+    elif shape.op == AOop.SEQUENCE:
+        res = ctx
+    else:
+        raise NotImplementedError(f'op: {op}, shape: {shape}') 
+    return res
 
 def bind_obj_shape(obj, shape) -> 'list | err':
     ctx, err = [], None
@@ -116,6 +135,7 @@ def bind_obj_shape(obj, shape) -> 'list | err':
                 print('ret bind_obj_shape', res)
                 if err is not None: break
                 ctx.extend(res)
+            ctx = combiner(ctx, shape)
 
     return ctx, err
 

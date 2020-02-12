@@ -17,6 +17,7 @@ def do_tfm(obj, tfm: str):
     if err is not None:
         raise ValueError(err)
     if DEBUG: print ('bindings:', context)
+    #assert False
 
     out, err = eval_aos_in_context(rhs, context)
     return out
@@ -63,8 +64,26 @@ def test2():
     y = do_tfm(obj, tfm2)
     print (f'result: {y}')
 
+def test_jq ():
+    #'[.[] | {message: .commit.message, name: .commit.committer.name, parents: [.parents[].html_url]}]'
+    # 'https://api.github.com/repos/stedolan/jq/commits?per_page=5'
+    from aos.common import get_obj1
+    obj = get_obj1()
+    tfm1 = 'commit & ((message & m) | (committer & (name & n))) \
+                -> ((message & m) | (name & n))'
+    tfm2 = ' (commit & ((message & m) | (committer & (name & n)))) | \
+             (parents & (html_url & hu)*) \
+                -> ((message & m) | (name & n) | (parents & (hu)*))'
+
+    #tfm1 = 'commit & (.message.m | .committer.name.n) -> ' 
+    #parse_tfm(tfm1)
+    y = do_tfm(obj, tfm2)
+    print (f'result: {y}')
+
+
 if __name__ == '__main__':
-    #test1()
+    test1()
     test2()
+    test_jq()
 
 

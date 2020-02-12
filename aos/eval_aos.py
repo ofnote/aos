@@ -1,11 +1,13 @@
 
 from .utils import apply_match
 from .aos import AndTuple, AOop
-from .common import DEBUG
+from .common import DEBUG, OrVals
+import itertools
+from collections import ChainMap
+
+II = isinstance
 
 
-class OrVals(list):
-    pass
 
 def get_res_err_from_tuples(res_err_n):
     res = [x[0] for x in res_err_n]
@@ -27,15 +29,16 @@ def eval_and(shape, contexts, colon=False):
 
     if not err:
         key, vals = res
-        #assert isinstance(vals, OrVals), f'vals = {vals}'
+        #assert II(vals, OrVals), f'vals = {vals}'
         if colon:
-            assert isinstance(key, OrVals), f'{key}'
+            assert II(key, OrVals), f'{key}'
 
-        if isinstance(key, OrVals) and not isinstance(vals, OrVals):
+        if II(key, OrVals) and not II(vals, OrVals):
+            print (key)
             res = OrVals([{k: vals} for k in key])
-        elif not isinstance(key, OrVals) and isinstance(vals, OrVals):
+        elif not II(key, OrVals) and II(vals, OrVals):
             res = OrVals([{key: v} for v in vals])
-        elif isinstance(key, OrVals) and isinstance(key, OrVals):
+        elif II(key, OrVals) and II(key, OrVals):
             assert len(key) == len(vals)
             res = zip(key, vals)
             res = dict(res)
@@ -47,15 +50,33 @@ def eval_and(shape, contexts, colon=False):
         res = None
         assert False, err
 
-    #if DEBUG:
-        #print(f'{shape}, {contexts} ->\n {key}\n {vals} \n {res}')
+    if DEBUG:
+        #print(f'eval_and: {shape}, {contexts} ->\n {key}\n {vals} \n {res}')
+        print (f'eval_and: {key}, {vals}')
+        print(f'eval_and:  {res}')
     return res, err
 
 def eval_colon(shape, contexts):
     return eval_and(shape, contexts, colon=True)
 
 def eval_or(shape, contexts):
-    raise NotImplementedError
+    shape_args = shape.args
+    #assert len(shape_args) == 2, f'eval_or: only handling 2 args'
+    res_err_n = [eval_aos_in_context(arg, contexts) for arg in shape_args]
+    res, err = get_res_err_from_tuples(res_err_n)
+
+    if not err:
+        #assert each element of res is a list
+        #res = list(itertools.chain(*res))
+        #assert each element of list is a dict
+        if DEBUG:
+            print(f'eval_or: {shape}, {contexts}')
+            print (f'eval_or: {res}')
+        res = dict(ChainMap(*res))
+    else:
+        res = None
+        assert False, err
+    return res, err
 
 def eval_seq(shape, contexts):
     shape_args = shape.args
@@ -67,20 +88,28 @@ def eval_seq(shape, contexts):
         res, err = eval_aos_in_context(arg, ctx)
         assert err is None
         res_n.append(res)
+    res_n = list(itertools.chain(*res_n))
     if DEBUG: print(f'eval_seq: {res_n}')
-    assert isinstance(res_n, list)
+    assert II(res_n, list)
     return res_n, err
 
 def eval_dim(shape, contexts):
     dim_name = shape.dim.name.strip()
     res = None
-    if isinstance(contexts, list):
+    if II(contexts, list):
         res = OrVals()
         for c in contexts:
-            assert isinstance(c, dict)
+            assert II(c, dict)
             if dim_name in c:
                 res.append(c[dim_name])
-    elif isinstance(contexts, dict):
+            else:
+                pass
+                #TODO: append None or not?
+                #res.append(None)
+        #single element contexts also passed in as list above
+        if len(res) == 1: res = res[0]
+
+    elif II(contexts, dict):
         if dim_name in contexts:
             res = contexts[dim_name] 
 

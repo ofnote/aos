@@ -1,8 +1,8 @@
 
 from .utils import apply_match
 from .aos import AndTuple, AOop
-from .common import DEBUG
-
+from .common import DEBUG, OrVals
+from collections import defaultdict
 
 class AndSplitter():
     def for_dict(obj, shape, **kwargs):
@@ -104,20 +104,36 @@ def get_bind_candidates(obj, shape):
     if DEBUG: print (f'< get_bind_candidates: {res}, {err}')
     return res, err
 
+
 def combiner(ctx: 'list', shape):
     assert shape.op is not None
     res = None
     if shape.op == AOop.OR:
         or_dict = {}
-        for d in ctx: or_dict.update(d)
+        for c in ctx: 
+            assert isinstance(c, dict), c
+            or_dict.update(c)
         res = [or_dict]
     elif shape.op == AOop.AND:
         res = ctx
         #raise NotImplementedError(f'{ctx}, {shape}')
     elif shape.op == AOop.SEQUENCE:
-        res = ctx
+        #res = ctx
+        temp_dict = defaultdict(list)
+
+        # make one dict
+        for c in ctx:
+            assert isinstance(c, dict)
+            for k, v in c.items():
+                temp_dict[k].append(v)
+
+        res = [{k: OrVals(v)} for k, v in temp_dict.items()] # list of dicts
+        #assert False, (ctx, res)
+
     else:
         raise NotImplementedError(f'op: {op}, shape: {shape}') 
+    if DEBUG:  print (f'---> combiner({shape.op})', ctx)
+
     return res
 
 def bind_obj_shape(obj, shape) -> 'list | err':

@@ -4,34 +4,55 @@ from .aos import AndTuple, AOop
 from .common import DEBUG
 
 
-class AndEval():
+class OrVals(list):
+    pass
 
+def get_res_err_from_tuples(res_err_n):
+    res = [x[0] for x in res_err_n]
+    err = [x[1] for x in res_err_n if x[1] is not None]
+    return res, err
 
-    def default_func(obj, *args, **kwargs):
-        err = f'not implemented type {type(obj)}'
-        return None, err
+def pair_lists(A, B):
+    #assert len(o1) == len(o2), f'o1={o1}\no2={o2}'
+    from itertools import cycle
+    zip_list = zip(A, cycle(B)) if len(A) > len(B) else zip(cycle(A), B)
+    #if DEBUG: print ('pairLIsts', A, B, list(zip_list))
+    return list(zip_list)
 
-
-    type2action = {
-        #dict: for_dict,
-        #AndTuple: for_AndTuple
-    }
-
-
-
-def eval_and(shape, contexts):
+def eval_and(shape, contexts, colon=False):
     shape_args = shape.args
     assert len(shape_args) == 2, f'eval_and: only handling 2 args'
     res_err_n = [eval_aos_in_context(arg, contexts) for arg in shape_args]
-    res = [x[0] for x in res_err_n]
-    err = [x[1] for x in res_err_n if x[1] is not None]
-    if len(err) is 0 :
-        res = {res[0]: res[1]}
+    res, err = get_res_err_from_tuples(res_err_n)
+
+    if not err:
+        key, vals = res
+        #assert isinstance(vals, OrVals), f'vals = {vals}'
+        if colon:
+            assert isinstance(key, OrVals), f'{key}'
+
+        if isinstance(key, OrVals) and not isinstance(vals, OrVals):
+            res = OrVals([{k: vals} for k in key])
+        elif not isinstance(key, OrVals) and isinstance(vals, OrVals):
+            res = OrVals([{key: v} for v in vals])
+        elif isinstance(key, OrVals) and isinstance(key, OrVals):
+            assert len(key) == len(vals)
+            res = zip(key, vals)
+            res = dict(res)
+        else: #none is orvals
+            res = {key: vals}
+
         err = None
     else:
         res = None
         assert False, err
+
+    #if DEBUG:
+        #print(f'{shape}, {contexts} ->\n {key}\n {vals} \n {res}')
     return res, err
+
+def eval_colon(shape, contexts):
+    return eval_and(shape, contexts, colon=True)
 
 def eval_or(shape, contexts):
     raise NotImplementedError
@@ -52,9 +73,18 @@ def eval_seq(shape, contexts):
 
 def eval_dim(shape, contexts):
     dim_name = shape.dim.name.strip()
-    res = [v for k, v in contexts.items() if k == dim_name]
-    if len(res) == 1: res = res[0] #only one match in contexts
-    elif len(res) == 0: #no match in contexts
+    res = None
+    if isinstance(contexts, list):
+        res = OrVals()
+        for c in contexts:
+            assert isinstance(c, dict)
+            if dim_name in c:
+                res.append(c[dim_name])
+    elif isinstance(contexts, dict):
+        if dim_name in contexts:
+            res = contexts[dim_name] 
+
+    if not res: #no match in contexts: res = None or []
         res = dim_name
     #if DEBUG: print(f'> eval_dim: {res}')
     return res, None
@@ -72,6 +102,8 @@ def eval_aos_in_context(shape, contexts):
         res, err = eval_and(shape, contexts)
     elif op == AOop.SEQUENCE:
         res, err = eval_seq(shape, contexts)
+    elif op == AOop.COLON:
+        res, err = eval_colon(shape, contexts)
     else:
         raise NotImplementedError(f'op: {op}, shape: {shape}')
 

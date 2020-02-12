@@ -130,7 +130,7 @@ class AosVisitor(NodeVisitor):
     def visit_or(self, node, visited_children):
         return node.text
     def visit_colon(self, node, visited_children):
-        return '&'
+        return ':'
     def visit_star(self, node, visited_children):
         return node.text
 

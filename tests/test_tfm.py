@@ -56,8 +56,8 @@ def test2():
     }
 
     tfm1 = '(records & ((fin_year & year) | (price & p))*) -> (year & (price & p))*'
-    #y = do_tfm(obj, tfm1)
-    #print (f'result: {y}')
+    y = do_tfm(obj, tfm1)
+    print (f'result: {y}')
 
     tfm2 = '(records & ((fin_year & year) | (price & p))*) -> (year : (price & p))'
     y = do_tfm(obj, tfm2)

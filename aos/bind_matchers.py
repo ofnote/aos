@@ -132,7 +132,7 @@ def bind_obj_shape(obj, shape) -> 'list | err':
             ctx = []
             for pair in to_bind_pairs:
                 res, err = bind_obj_shape(pair[0], pair[1])
-                print('ret bind_obj_shape', res)
+                #if DEBUG: print('ret bind_obj_shape', res)
                 if err is not None: break
                 ctx.extend(res)
             ctx = combiner(ctx, shape)

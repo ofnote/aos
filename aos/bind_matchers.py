@@ -127,7 +127,10 @@ def combiner(ctx: 'list', shape):
             for k, v in c.items():
                 temp_dict[k].append(v)
 
-        res = [{k: OrVals(v)} for k, v in temp_dict.items()] # list of dicts
+        #print(temp_dict)
+        #assert False, temp_dict
+
+        res = [{k: OrVals(v) for k, v in temp_dict.items()}] # list of dicts
         #assert False, (ctx, res)
 
     else:

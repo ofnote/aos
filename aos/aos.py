@@ -253,7 +253,10 @@ class AOShape(NamedTuple):
 #from typing import NewType
 #AndTuple = NewType('AndTuple', tuple)
 class AndTuple(tuple):
-    pass
+    
+    def __repr__(self):
+        s = super().__repr__()
+        return f'`{s}'
 
 def decl_dim (name, dimtype, values):
     if dimtype == 'categorical':

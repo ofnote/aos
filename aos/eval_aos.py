@@ -21,6 +21,24 @@ def pair_lists(A, B):
     #if DEBUG: print ('pairLIsts', A, B, list(zip_list))
     return list(zip_list)
 
+def to_AndTuple(k, v):
+    return AndTuple((k,v))
+
+def and_simplify(key, vals):
+    # moving OrVals up the result expression
+    if II(key, OrVals) and not II(vals, OrVals):
+        print (key)
+        res = OrVals([to_AndTuple(k, vals) for k in key])
+    elif not II(key, OrVals) and II(vals, OrVals):
+        res = OrVals([to_AndTuple(key, v) for v in vals])
+    elif II(key, OrVals) and II(vals, OrVals):
+        assert len(key) == len(vals)
+        res = zip(key, vals)
+        res = OrVals([to_AndTuple(k,v) for (k,v) in res])
+    else: #none is orvals
+        res = to_AndTuple(key, vals)
+    return res
+
 def eval_and(shape, contexts, colon=False):
     shape_args = shape.args
     assert len(shape_args) == 2, f'eval_and: only handling 2 args'
@@ -32,18 +50,11 @@ def eval_and(shape, contexts, colon=False):
         #assert II(vals, OrVals), f'vals = {vals}'
         if colon:
             assert II(key, OrVals), f'{key}'
-
-        if II(key, OrVals) and not II(vals, OrVals):
-            print (key)
-            res = OrVals([{k: vals} for k in key])
-        elif not II(key, OrVals) and II(vals, OrVals):
-            res = OrVals([{key: v} for v in vals])
-        elif II(key, OrVals) and II(key, OrVals):
-            assert len(key) == len(vals)
-            res = zip(key, vals)
+            res = and_simplify(key, vals)
+            print(res)
             res = dict(res)
-        else: #none is orvals
-            res = {key: vals}
+        else:
+            res = and_simplify(key, vals)
 
         err = None
     else:
@@ -59,7 +70,14 @@ def eval_and(shape, contexts, colon=False):
 def eval_colon(shape, contexts):
     return eval_and(shape, contexts, colon=True)
 
-def eval_or(shape, contexts):
+def or_simplify (res):
+    for x in res:
+        if not II(x, AndTuple): return
+        #z = dict(x)
+    res = dict(res)
+    return res
+
+def eval_or(shape, contexts, simplify_or=True):
     shape_args = shape.args
     #assert len(shape_args) == 2, f'eval_or: only handling 2 args'
     res_err_n = [eval_aos_in_context(arg, contexts) for arg in shape_args]
@@ -71,8 +89,10 @@ def eval_or(shape, contexts):
         #assert each element of list is a dict
         if DEBUG:
             print(f'eval_or: {shape}, {contexts}')
-            print (f'eval_or: {res}')
-        res = dict(ChainMap(*res))
+            print (f'eval_or - res: {res}')
+        
+        if simplify_or:
+            res = or_simplify(res)
     else:
         res = None
         assert False, err
@@ -83,12 +103,21 @@ def eval_seq(shape, contexts):
     assert len(shape_args) == 1, f'eval infeasible, multiple args: ({shape_args})'
     arg = shape_args[0]
 
+    assert len(contexts) == 1
+    ctx = contexts[0]
+    '''
     res_n = []
     for ctx in contexts:
         res, err = eval_aos_in_context(arg, ctx)
         assert err is None
         res_n.append(res)
-    res_n = list(itertools.chain(*res_n))
+    '''
+    res, err = eval_aos_in_context(arg, ctx)
+    assert err is None
+    assert II(res, OrVals)
+    #when OrVals hits a Seq, it becomes an ordinary list
+    res_n = [x for x in res]
+    #res_n = list(itertools.chain(*res_n))
     if DEBUG: print(f'eval_seq: {res_n}')
     assert II(res_n, list)
     return res_n, err

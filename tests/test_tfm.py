@@ -69,13 +69,17 @@ def test_jq ():
     # 'https://api.github.com/repos/stedolan/jq/commits?per_page=5'
     from aos.common import get_obj1
     obj = get_obj1()
+    #tfm0 = 'commit & c@((message & m) | (committer & (name & n))) #bind intermediate?
+
     tfm1 = 'commit & ((message & m) | (committer & (name & n))) \
                 -> ((message & m) | (name & n))'
+
     tfm2 = ' (commit & ((message & m) | (committer & (name & n)))) | \
              (parents & (html_url & hu)*) \
                 -> ((message & m) | (name & n) | (parents & (hu)*))'
 
     #tfm1 = 'commit & (.message.m | .committer.name.n) -> ' 
+    #tfm1 = 'commit & (message/m, committer/name/n) -> ' 
     #parse_tfm(tfm1)
     y = do_tfm(obj, tfm2)
     print (f'result: {y}')

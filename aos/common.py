@@ -1,7 +1,7 @@
 class OrVals(list):
     pass
     
-DEBUG = False
+DEBUG = True
 
 def get_obj1():
     obj = \

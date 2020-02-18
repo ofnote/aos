@@ -8,10 +8,11 @@ from collections import ChainMap
 II = isinstance
 
 
-
 def get_res_err_from_tuples(res_err_n):
+    #print ('**get: ', res_err_n, len(res_err_n))
     res = [x[0] for x in res_err_n]
     err = [x[1] for x in res_err_n if x[1] is not None]
+    err = list(itertools.chain(*err)) #TODO: fix
     return res, err
 
 def pair_lists(A, B):
@@ -71,15 +72,16 @@ def eval_colon(shape, contexts):
     return eval_and(shape, contexts, colon=True)
 
 def or_simplify (res):
+    # list of AndTuple -> dict
     for x in res:
-        if not II(x, AndTuple): return
+        if not II(x, AndTuple): return res
         #z = dict(x)
     res = dict(res)
     return res
 
-def eval_or(shape, contexts, simplify_or=True):
+def eval_or(shape, contexts, simplify_or=False):
     shape_args = shape.args
-    #assert len(shape_args) == 2, f'eval_or: only handling 2 args'
+    #assert len(shape_args) == 2, f'eval_or: only handling 2 args: {shape_args}'
     res_err_n = [eval_aos_in_context(arg, contexts) for arg in shape_args]
     res, err = get_res_err_from_tuples(res_err_n)
 
@@ -91,8 +93,10 @@ def eval_or(shape, contexts, simplify_or=True):
             print(f'eval_or: {shape}, {contexts}')
             print (f'eval_or - res: {res}')
         
+        
         if simplify_or:
             res = or_simplify(res)
+
     else:
         res = None
         assert False, err

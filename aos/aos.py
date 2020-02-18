@@ -193,7 +193,15 @@ class AOShape(NamedTuple):
             op = AOShape.optext2op[op]
         for arg in args:
             assert isinstance(arg, AOShape), f'{arg}'
-        res = AOShape(op=op, args=args)
+
+        if len(args) > 2 and op is AOop.AND: #convert n-ary to a binary tree
+            args = args[::-1] #reverse list
+            b, a = args[:2] # order of last 2 elements is reversed
+            res = AOShape(op=op, args=(a,b))
+            for arg in args[2:]:
+                res = AOShape(op=op, args=[arg, res])
+        else:
+            res = AOShape(op=op, args=args)
         #print (f'build_from ret: {AOop.to_str(res.op)}')
         return res
 
@@ -256,7 +264,7 @@ class AndTuple(tuple):
     
     def __repr__(self):
         s = super().__repr__()
-        return f'`{s}'
+        return f'`{s}`'
 
 def decl_dim (name, dimtype, values):
     if dimtype == 'categorical':

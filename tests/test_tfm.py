@@ -71,18 +71,21 @@ def test_jq ():
     obj = get_obj1()
     #tfm0 = 'commit & c@((message & m) | (committer & (name & n))) #bind intermediate?
 
-    tfm1 = 'commit & ((message & m) | (committer & (name & n))) \
-                -> ((message & m) | (name & n))'
+    #tfm1 = 'commit & ((message & m) | (committer.name.n)) \
+    #            -> ((message & m) | (name & n))'
+    tfm1 = 'commit & ((message.m) | (committer.name.n)) \
+                -> ((message.m) | (name.n))'
 
-    tfm2 = ' (commit & ((message & m) | (committer & (name & n)))) | \
-             (parents & (html_url & hu)*) \
-                -> ((message & m) | (name & n) | (parents & (hu)*))'
+    tfm2 = ' (commit.((message.m) | (committer.name.n))) | \
+             (parents & (html_url.hu)*) \
+                -> ((message.m) | (name.n) | (parents.(hu)*))'
 
     #tfm1 = 'commit & (.message.m | .committer.name.n) -> ' 
     #tfm1 = 'commit & (message/m, committer/name/n) -> ' 
     #parse_tfm(tfm1)
-    y = do_tfm(obj, tfm2)
-    print (f'result: {y}')
+    for t in [tfm1, tfm2]:
+        y = do_tfm(obj, t)
+        print (f'result: {y}')
 
 
 if __name__ == '__main__':

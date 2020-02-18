@@ -15,7 +15,7 @@ AOS_Grammar = Grammar(
         term = (lpar aos rpar star?) / word
         operator = ws? (or / and / colon) ws?
 
-        and    = '&'
+        and    = '&' / '.'
         or     = '|'
         colon  = ':'
         star   = '*'
@@ -126,9 +126,9 @@ class AosVisitor(NodeVisitor):
         return sys.intern(node.text)
 
     def visit_and(self, node, visited_children):
-        return node.text
+        return '&'
     def visit_or(self, node, visited_children):
-        return node.text
+        return '|'
     def visit_colon(self, node, visited_children):
         return ':'
     def visit_star(self, node, visited_children):
@@ -149,6 +149,14 @@ class AosVisitor(NodeVisitor):
         else: return node
 
 
+def parse_aos(aos_str):
+    global AOS_Grammar
+    tree = AOS_Grammar.parse(aos_str)
+    if DEBUG: print (tree)
+    res = (AosVisitor().visit(tree))
+    if DEBUG: print ('visited:', res)
+    res = build_aos(res)
+    return res
 
 
 def build_aos (prefix_rep):
@@ -178,56 +186,6 @@ def build_aos (prefix_rep):
 
 
     return res
-
-
-
-def test_grammar():
-    global AOS_Grammar
-    def grma(s):
-        tree = AOS_Grammar.parse(s)
-
-
-    grma("((a | b | k) & c & d)")
-    grma("(a | b | k) & c & d")
-    grma("(a : (b|c) )")
-
-    grma("a & ((b|c) & d)")
-    grma("b:int | c:str")
-    grma('(c1 | c2)*')
-
-
-def parse_aos(aos_str):
-    global AOS_Grammar
-    tree = AOS_Grammar.parse(aos_str)
-    if DEBUG: print (tree)
-    res = (AosVisitor().visit(tree))
-    if DEBUG: print ('visited:', res)
-    res = build_aos(res)
-    return res
-
-
-def test_all():
-    examples = [
-        'a',
-        'c1 | c2',
-        'n & (c1 | c2 | c3)',
-        'b & c & h & w',
-        '((a | b | k) & c & d)',
-        "a & ((b|c) & d)",
-        "a : (b|c)",
-        "(b:int) | (c:str)",
-        '(c1 | c2)*'
-
-    ]
-    for e in examples[:]:
-        print (f'--->> trying {e}')
-        res = parse_aos(e)
-        print ('build_aos: ', res)
-
-if __name__ == '__main__':
-    DEBUG = False
-    test_grammar()
-    test_all()
 
 
 

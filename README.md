@@ -17,7 +17,7 @@ Writing data pipelines involves complex data transformations over nested data, e
 
 * Allows writing explicit data shapes, **inline** in code. In Python, use type annotations.
 
-* Validate concrete data against `aos` shapes anywhere via **assertions**.
+* Validate concrete data against `aos` shapes anywhere via **assertions**: `aos.is_aos_shape`.
 
 * Write shapes for a variety of data conveniently -- Python native objects (`dict`, `list`, scalars), tensors (`numpy`,` pytorch`, `tf`), `pandas`,`hdf5`,`tiledb`,`xarray`,`struct-tensor`, etc.
 
@@ -47,7 +47,7 @@ Thinking in terms of `and`-`or` shapes takes a bit of practice but proves to be 
 
 * Lists over shape `s` are denoted as `(s)*`.  Shorthand for `(s|..|s)`.
 * Dictionary: `(k1 & v1) | (k2 & v2) | ... | (kn & vn)` where `ki` and `vi` is the `i`th key and value.
-* Pandas tables: `(n & (c1|c2|...|cn))` where `n` is the row dimension (the number of rows) and `c1,...,cn` are column names.
+* Pandas tables: `(n & ( (c1&int)| (c2&str) | ... | (cn&str) )` where `n` is the row dimension (the number of rows) and `c1,...,cn` are column names.
 
 The `aos` expressions let you write object shapes very *compactly*. For example, consider a highly nested Python object `X` of type
 
@@ -137,12 +137,12 @@ The above examples of use type names (`str`) or integer values (`2`,`3`) in shap
 
 Data is defined over two kinds of dimensions:
 
-* **Continuous**. Think of a range of values, e.g., a numpy array of shape (5, 200) is defined over two continuous dimensions, say `n` and `d`, where `n` ranges over values `0-4` and `d` ranges over `0-199`.
-* **Categorical**. A set of names, e.g., a dictionary `{'a': 4, 'b': 5}` is defined over keys aka dim names `['a', 'b']`. One can also view each key, e.g., `a` or `b` , as a **Singleton** dimension.
+* **Continuous**. A range of values, e.g., a numpy array of shape (5, 200) is defined over two continuous dimensions, say `n` and `d`, where `n` ranges over values `0-4` and `d` ranges over `0-199`.
+* **Categorical**. A set of names, e.g., a dictionary `{'a': 4, 'b': 5}` is defined over *keys*  (dim names) `['a', 'b']`. One can also view each key, e.g., `a` or `b` , as a **Singleton** dimension.
 
 
 
-The library provides an API to declare both type of dimensions and `aos` expressions over these dimensions, e.g., `n & d`.
+**Programmatic API**. The library provides an API to declare both type of dimensions and `aos` expressions over these dimensions, e.g., declare `n` and `d` as two continuous dimensions and then define shape `n & d`.
 
 
 

@@ -1,26 +1,5 @@
-#from aos.tfm import do_tfm
-from aos.parser import parse_aos
-from aos.bind_matchers import bind_obj_shape
-from aos.eval_aos import eval_aos_in_context
-from aos.common import DEBUG
+from aos.tfm import do_tfm
 
-def parse_tfm(tfm: str):
-    lhs, rhs = [x.strip() for x in tfm.split('->')]
-    lhs = parse_aos(lhs)
-    rhs = parse_aos(rhs)
-    if DEBUG: print (lhs, rhs)
-    return lhs, rhs
-
-def do_tfm(obj, tfm: str):
-    lhs, rhs = parse_tfm(tfm)
-    context, err =  bind_obj_shape(obj, lhs)
-    if err is not None:
-        raise ValueError(err)
-    if DEBUG: print ('bindings:', context)
-    #assert False
-
-    out, err = eval_aos_in_context(rhs, context)
-    return out
 
 def test1():
     d = {'items': [
@@ -67,7 +46,7 @@ def test2():
 def test_jq ():
     #'[.[] | {message: .commit.message, name: .commit.committer.name, parents: [.parents[].html_url]}]'
     # 'https://api.github.com/repos/stedolan/jq/commits?per_page=5'
-    from aos.common import get_obj1
+    from test_data import get_obj1
     obj = get_obj1()
     #tfm0 = 'commit & c@((message & m) | (committer & (name & n))) #bind intermediate?
 

@@ -9,7 +9,7 @@ def get_long_description():
         return f.read()
 
 setuptools.setup(name='aos',
-      version='0.0.1',
+      version='0.1.0',
       description="A shape language for arbitrary data",
       long_description=get_long_description(),
       long_description_content_type="text/markdown",

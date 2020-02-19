@@ -13,13 +13,13 @@ Writing data pipelines involves complex data transformations over nested data, e
 
 `aos` is a unified, compact language for describing the shapes of both homogeneous (tensors) and heterogeneous (dictionaries) data, and combinations, independent of the specific data library. 
 
-* Based on a well-defined (Boolean-like) **algebra** of data shapes.
+* Based on a well-defined (regex-like) **algebra** of data shapes.
 
 * Allows writing explicit data shapes, **inline** in code. In Python, use type annotations.
 
 * Validate concrete data against `aos` shapes anywhere via **assertions**.
 
-* Write shapes for a variety of data conveniently -- Python native objects, tensors (`numpy`,` pytorch`, `tf`), `pandas`,`hdf5`,`tiledb`,`xarray`,`struct-tensor`, etc.
+* Write shapes for a variety of data conveniently -- Python native objects (`dict`, `list`, scalars), tensors (`numpy`,` pytorch`, `tf`), `pandas`,`hdf5`,`tiledb`,`xarray`,`struct-tensor`, etc.
 
 
 ```pip install aos```
@@ -102,6 +102,32 @@ def test_pytorch():
     arr = torch.tensor([[1,2,3],[4,5,6]])
     is_aos_shape(arr, '2 & 3')
 ```
+
+
+
+## And-Or Shape Transformations
+
+Because `aos` expressions can both *match* and *specify* heterogeneous data, we can write transformation rules using `aos` to manipulate and transform data.
+
+```python
+def test1():
+    # original data
+    a = {'items': [
+            {'k': 1}, {'k': 2}, {'k': 3}
+        ]}
+
+    # specify transformation (left aos -> right aos)
+    # using `query` variables `k` and `v`
+    
+    tfm = 'items & (k & v)* -> (v)*'
+
+    b = do_tfm(a, tfm)
+    print(b) # [1, 2, 3]
+```
+
+
+
+See more examples [here](tests/test_tfm.py).
 
 
 

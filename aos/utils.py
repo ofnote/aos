@@ -1,8 +1,21 @@
 from typing import Callable
 
-def apply_match(klass, obj, *args, **kwargs):
-    #print(f'from_obj: {obj}, {type(obj)}')
-    t2a = klass.type2action
+def unroll_type2actions(t2a):
+    res = {}
+    for k, a in t2a.items():
+        if isinstance(k, tuple):
+            for i in k:
+                assert i not in res
+                res[i] = a
+        else:
+            res[k] = a
+    return res
+
+def apply_match_t2a(t2a, obj, *args, **kwargs):
+    '''
+        t2a: type2action dictionary for the various 'obj' types
+    '''
+    t2a = unroll_type2actions(t2a)
     tobj = type(obj)
     #print(f'apply_match: {tobj}, {tobj.__name__}')
     if tobj in t2a:
@@ -22,3 +35,9 @@ def apply_match(klass, obj, *args, **kwargs):
         assert isinstance(func, Callable), f'apply_match: type = {type(func)}'
 
     return func(obj, *args, **kwargs)
+
+def apply_match(klass, obj, *args, **kwargs):
+    #print(f'from_obj: {obj}, {type(obj)}')
+    t2a = klass.type2action
+    return apply_match_t2a(t2a, obj, *args, **kwargs)
+

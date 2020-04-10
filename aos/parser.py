@@ -160,6 +160,9 @@ def parse_aos(aos_str):
 
 
 def build_aos (prefix_rep):
+    '''
+    prefix_rep: prefix representation of the aos tree: [op, args]
+    '''
     if isinstance(prefix_rep, str):
         if DEBUG: print (f'build_aos: str -- {prefix_rep}')
 

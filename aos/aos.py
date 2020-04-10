@@ -167,11 +167,18 @@ class AOConst(NamedTuple):
     def is_ellipsis(s: str):
         return s == AOConst().ELLIPSIS
 
+GLOBALS = dict(
+    pprint_treelike=True
+)
+    
+
 class AOShape(NamedTuple):
     op: int = None
     args: 'List[AOShape]' = None
-    dim: Dim = None
     name: str = None
+
+    dim: Dim = None
+
 
     optext2op = {
     '&': AOop.AND,
@@ -235,6 +242,16 @@ class AOShape(NamedTuple):
     def __ror__(self, shape):
         return self.orop(shape)
 
+    def __key(self):
+        if self.dim is not None:
+            return self.dim
+        else:
+            res = (self.op, self.name) + tuple(self.args)
+        return res
+
+    def __hash__(self):
+        return hash(self.__key())
+
     def __repr__(self):
         if self.op is None:
             assert self.dim is not None
@@ -244,18 +261,45 @@ class AOShape(NamedTuple):
             #print (f'rep: op = {self.op}, {op}')
             args = [a.__repr__() for a in self.args]
             #res = [f'{a} {op}' for i, a in args]
-            res = []
-            for i, a in enumerate(args):
-                if i != len(args) - 1:
-                    res.append(f'{a} {op}')
-                else:
-                    res.append(f'{a}')
-            #print (f'repr: {res}')
-            if op == '*': res.append('*')
+            if not GLOBALS['pprint_treelike']:
+                res = []
+                for i, a in enumerate(args):
+                    if i != len(args) - 1:
+                        res.append(f'{a} {op}')
+                    else:
+                        res.append(f'{a}')
+                #print (f'repr: {res}')
+                if op == '*': res.append('*')
 
-            return '(' + ' '.join(res) + ')'
+                res = '(' + ' '.join(res) + ')'
+            
+            else:
+                res = {}
+
+                if self.op is AOop.OR:
+                    res = args
+                else:
+                    res = (op, args)
+                    if self.op is AOop.AND:
+                        res = {}
+                        rest_args = args[1:] if len(args) > 2 else args[-1] 
+                        res [args[0]] = rest_args
+                    elif self.op is AOop.SEQUENCE:
+                        res = {}
+                        assert len(args) == 1
+                        res[op] = args[0]
+
+
+
+            
+            return res
 
             # [x for x in chain.from_iterable(zip_longest(l1, l2)) if x is not None]
+
+    def __str__(self):
+        from pprint import pformat
+        o = self.__repr__()
+        return pformat(o, indent=2)
 
 
 #from typing import NewType

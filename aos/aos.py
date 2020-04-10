@@ -1,134 +1,9 @@
-'''
-from sympy import symbols, Integer
-from sympy import And, Or
-from sympy.core.symbol import Symbol
-from sympy import nan, simplify
-from sympy.logic.boolalg import BooleanFunction
-from sympy.core.function import Function
-'''
-
-from math import ceil
-
-#https://stackoverflow.com/questions/57514529/how-to-add-arguments-to-a-class-that-extends-poly-class-in-sympy
-#https://stackoverflow.com/questions/57333942/how-to-assign-properties-to-symbols-in-sympy-and-have-them-in-the-same-domain
-# dimension class
-#class Dim(Symbol):
-
-class DimSymbol():
-
-    decls = {}
-    __slots__ = 'name', 'fullname'
-
-    '''
-    def __new__(self, name:str, fullname:str =None):
-        obj = Symbol.__new__(self, name)
-        obj.fullname = fullname
-        Dim._declare(obj)
-        return obj
-    def __new__(self, name:str, *args, **kwargs):
-        ret = Symbol.__new__(self, name, commutative=False)
-        print(f'new: {ret}')
-        return ret
-    '''
-
-    def __init__(self, name:str, fullname:str =None):
-        # name field accepted by parent class Symbol
-        #https://stackoverflow.com/questions/10788976/how-do-i-properly-inherit-from-a-superclass-that-has-a-new-method
-        self.name = name
-        self.fullname = fullname
-        DimSymbol._declare(self)
-
-
-    @property
-    def longname(self):
-        res = '' if self.fullname is None else self.fullname
-        res += f'({self.name})'
-        return res
-    
-
-    @staticmethod
-    def _declare(d):
-        if d.name in DimSymbol.decls:
-            raise ValueError(f'Dimension {d.name} already declared')
-        DimSymbol.decls[d.name] = d
-
-    @staticmethod
-    def lookup(name: str, hard=True):
-        if name not in DimSymbol.decls:
-            if hard:
-                assert False, (f'Dim {name} not declared')
-            else: return None
-        else:
-            return DimSymbol.decls[name]
-
-    def __repr__(self):
-        return self.name
-
-    '''
-    @staticmethod
-    def eval_name(e):
-        #evalute a shape expression, in context of declared names
-        sub_map = [(e, dv.longname) for e, dv in Dim.decls.items()]
-        return str(e.subs(sub_map))
-    '''
-
-'''
-AOShape :=
-    ContinuousDim of (name: str, span: Slice)
-    | SingletonDim of (name: str, valtype: str, logicaltype: str)
-    | CategoricalDim of (name: str, categories: List[SingletonDim])
-    | Op of (opt_name, op, List[AOShape])
-
-    # defn without recursion:
-    | AOShape of (optname, sexpr) #sexpr is a separate recursive type
-
-'''
-
-class ContinuousDim(DimSymbol):
-    __slots__ = 'span', '_size'
-    def __init__(self, name: str, span: slice, fullname: str=None):
-        super().__init__(name=name, fullname=fullname)
-        self.span = span
-
-        size = (span.stop - span.start)
-        if span.step is not None:
-            size = ceil( (1.* size)/span.step) # (1,8,2) -> 8 - 1 = 7. ceil(7 / 2)
-        self._size = size
-
-
-    def size(self):
-        return self._size
-
-    def __repr__(self):
-        return super().__repr__()
-
-class SingletonDim(DimSymbol):
-    __slots__ = 'valtype'
-    def __init__(self, name: str, valtype: str, fullname: str=None):
-        super().__init__(name=name, fullname=fullname)
-        self.valtype = valtype
-
-
-class CategoricalDim(DimSymbol):
-    __slots__ = 'categories', '_num_categories'
-
-    def __init__(self, name, categories, fullname: str=None):
-        super().__init__(name=name, fullname=fullname)
-        self.categories = [SingletonDim(name=cat[0], valtype=cat[1]) for cat in categories]
-        self._num_categories = len(self.categories)
-    def num_categories(self):
-        return self._num_categories
-
-from typing import Union, NamedTuple, List
-
-Dim = Union[ContinuousDim, CategoricalDim]
-
-'''
-Shape = Dim | AndDim of Shape*| OrDim of Shape*
-Shape = Dim | Op of op, Shape*
-'''
-
+from .dim import Dim, DimSymbol, CategoricalDim, ContinuousDim
+from .common import Config
 from enum import Enum
+from typing import NamedTuple, List
+from pprint import pformat
+
 class AOop(Enum):
     AND: int = 0
     OR: int = 1
@@ -167,10 +42,31 @@ class AOConst(NamedTuple):
     def is_ellipsis(s: str):
         return s == AOConst().ELLIPSIS
 
-GLOBALS = dict(
-    pprint_treelike=True
-)
+#from typing import NewType
+#AndTuple = NewType('AndTuple', tuple)
+class AndTuple(tuple):
     
+    def __repr__(self):
+        s = super().__repr__()
+        return f'`{s}`'
+
+
+'''
+Shape = Dim | AndDim of Shape*| OrDim of Shape*
+Shape = Dim | Op of op, Shape*
+'''
+
+'''
+AOShape :=
+    ContinuousDim of (name: str, span: Slice)
+    | SingletonDim of (name: str, valtype: str, logicaltype: str)
+    | CategoricalDim of (name: str, categories: List[SingletonDim])
+    | Op of (opt_name, op, List[AOShape])
+
+    # defn without recursion:
+    | AOShape of (optname, sexpr) #sexpr is a separate recursive type
+
+'''
 
 class AOShape(NamedTuple):
     op: int = None
@@ -252,17 +148,44 @@ class AOShape(NamedTuple):
     def __hash__(self):
         return hash(self.__key())
 
+    def __repr_obj__(self, depth=0):
+        res = {}
+
+        if self.op is None:
+            assert self.dim is not None
+            res = self.dim.__repr__()
+        else:
+            op = AOop.to_str(self.op)
+            args = [a.__repr_obj__(depth+1) for a in self.args]
+
+            if self.op is AOop.OR:
+                res = args
+            else:
+                res = (op, args)
+                if self.op is AOop.AND:
+                    arg0 = args[0]
+                    rest_args = args[1:] if len(args) > 2 else args[-1] 
+                    res = (arg0, rest_args)
+                elif self.op is AOop.SEQUENCE:
+                    res = {}
+                    assert len(args) == 1
+                    res[op] = args[0]
+
+        return res
+
     def __repr__(self):
         if self.op is None:
             assert self.dim is not None
             return self.dim.__repr__()
         else:
-            op = AOop.to_str(self.op)
-            #print (f'rep: op = {self.op}, {op}')
-            args = [a.__repr__() for a in self.args]
             #res = [f'{a} {op}' for i, a in args]
-            if not GLOBALS['pprint_treelike']:
+            if not Config.pprint_treelike:
+                op = AOop.to_str(self.op)
+                #print (f'rep: op = {self.op}, {op}')
+                args = [a.__repr__() for a in self.args]
+
                 res = []
+                # [x for x in chain.from_iterable(zip_longest(l1, l2)) if x is not None]
                 for i, a in enumerate(args):
                     if i != len(args) - 1:
                         res.append(f'{a} {op}')
@@ -274,41 +197,16 @@ class AOShape(NamedTuple):
                 res = '(' + ' '.join(res) + ')'
             
             else:
-                res = {}
+                res = self.__repr_obj__()
+                res = pformat(res, indent=4)
 
-                if self.op is AOop.OR:
-                    res = args
-                else:
-                    res = (op, args)
-                    if self.op is AOop.AND:
-                        res = {}
-                        rest_args = args[1:] if len(args) > 2 else args[-1] 
-                        res [args[0]] = rest_args
-                    elif self.op is AOop.SEQUENCE:
-                        res = {}
-                        assert len(args) == 1
-                        res[op] = args[0]
-
-
-
-            
             return res
 
-            # [x for x in chain.from_iterable(zip_longest(l1, l2)) if x is not None]
 
     def __str__(self):
-        from pprint import pformat
-        o = self.__repr__()
-        return pformat(o, indent=2)
+        return str(self.__repr__())
 
 
-#from typing import NewType
-#AndTuple = NewType('AndTuple', tuple)
-class AndTuple(tuple):
-    
-    def __repr__(self):
-        s = super().__repr__()
-        return f'`{s}`'
 
 def decl_dim (name, dimtype, values):
     if dimtype == 'categorical':

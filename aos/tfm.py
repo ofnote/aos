@@ -1,7 +1,8 @@
 from aos.parser import parse_aos
 from aos.bind_matchers import bind_obj_shape
 from aos.eval_aos import eval_aos_in_context
-from aos.common import DEBUG
+from aos.common import Config
+DEBUG = Config.DEBUG
 
 def parse_tfm(tfm: str):
     lhs, rhs = [x.strip() for x in tfm.split('->')]

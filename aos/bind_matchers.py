@@ -1,8 +1,9 @@
 
 from .utils import apply_match
 from .aos import AndTuple, AOop
-from .common import DEBUG, OrVals
 from collections import defaultdict
+from .common import Config, OrVals
+DEBUG = Config.DEBUG
 
 class AndSplitter():
     def for_dict(obj, shape, **kwargs):

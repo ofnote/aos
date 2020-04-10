@@ -1,10 +1,11 @@
 
 from .utils import apply_match
 from .aos import AndTuple, AOop
-from .common import DEBUG, OrVals
+from .common import Config, OrVals
 import itertools
 from collections import ChainMap
 
+DEBUG = Config.DEBUG
 II = isinstance
 
 

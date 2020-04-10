@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+
+import os, json
+from aos.infer import infer_aos
+from aos.common import Config
+import argparse
+
+def infer_json(fname):
+    if not os.path.exists(fname):
+        print(f'Path {fname} does not exist.')
+        return
+    with open(fname) as f:
+        d = json.load(f)
+        print (f'Loaded JSON from {fname}')
+        r = infer_aos(d)
+        print (f'aos:')
+        print (r)
+
+
+
+def main(C):
+
+    if C.filetype == 'json':
+        Config.pprint_treelike = C.pprint_treelike
+        infer_json(C.filename)
+    else:
+        raise NotImplementedError('unknown filetype')
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser("Infer AOS from serialized data")
+    parser.add_argument('--filename', '-f', required=True)
+    parser.add_argument('--pprint_treelike', '-p', dest='pprint_treelike', 
+                    action='store_true', help='flag to print in tree format')
+    parser.set_defaults(pprint_treelike=False)
+
+    args = parser.parse_args()
+    args.filetype = 'json'
+    
+    main(args)

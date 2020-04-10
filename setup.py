@@ -9,7 +9,7 @@ def get_long_description():
         return f.read()
 
 setuptools.setup(name='aos',
-      version='0.1.0',
+      version='0.1.1',
       description="A shape language for arbitrary data",
       long_description=get_long_description(),
       long_description_content_type="text/markdown",
@@ -20,7 +20,7 @@ setuptools.setup(name='aos',
       platforms=['POSIX'],
       packages=setuptools.find_packages(),
       #entry_points={},
-      #scripts=['scripts/tsa'],
+      scripts=['scripts/aos-infer'],
       classifiers=[
           'Environment :: Console',
           'Intended Audience :: Developers',

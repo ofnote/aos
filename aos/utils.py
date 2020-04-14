@@ -11,7 +11,7 @@ def unroll_type2actions(t2a):
             res[k] = a
     return res
 
-def apply_match_t2a(t2a, obj, *args, **kwargs):
+def apply_match_t2a(t2a, obj, default=None, *args, **kwargs):
     '''
         t2a: type2action dictionary for the various 'obj' types
     '''
@@ -26,7 +26,7 @@ def apply_match_t2a(t2a, obj, *args, **kwargs):
         tkey = f'{tobj.__module__}.{tobj.__name__}'
     else:
         print (f'apply_match: not found {tobj} key')
-        return klass.default_func(obj, *args, **kwargs)     
+        return default(obj, *args, **kwargs)     
     
     func = t2a[tkey]
     if isinstance(func, staticmethod):
@@ -39,5 +39,5 @@ def apply_match_t2a(t2a, obj, *args, **kwargs):
 def apply_match(klass, obj, *args, **kwargs):
     #print(f'from_obj: {obj}, {type(obj)}')
     t2a = klass.type2action
-    return apply_match_t2a(t2a, obj, *args, **kwargs)
+    return apply_match_t2a(t2a, obj, default=klass.default_func, *args, **kwargs)
 

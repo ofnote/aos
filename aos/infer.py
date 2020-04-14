@@ -9,7 +9,7 @@ class InferAOS():
         self.type2action = {
             dict: self.for_dict,
             (list, tuple): self.for_list_tuple,
-            (str, int, float): self.for_number,
+            (str, int, float, bool): self.for_scalar,
         }
 
     def for_dict(self, obj, **kwargs):
@@ -40,14 +40,14 @@ class InferAOS():
 
         return res
 
-    def for_number(self, obj, **kwargs):
+    def for_scalar(self, obj, **kwargs):
         return get_or_decl_dim(type(obj).__name__)
 
     def default_func(self, obj, **kwargs):
         raise NotImplementedError(f'InferAOS : type = {type(obj), type(obj).__name__}')
 
     def infer(self, obj):
-        return apply_match_t2a(self.type2action, obj)
+        return apply_match_t2a(self.type2action, obj, default=self.default_func)
 
 def infer_aos (x, max_list_items=10, simplify=True):
     res = InferAOS(max_list_items, simplify).infer(x)

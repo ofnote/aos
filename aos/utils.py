@@ -1,4 +1,5 @@
 from typing import Callable
+from itertools import chain
 
 def unroll_type2actions(t2a):
     res = {}
@@ -11,7 +12,7 @@ def unroll_type2actions(t2a):
             res[k] = a
     return res
 
-def apply_match_t2a(t2a, obj, default=None, *args, **kwargs):
+def apply_match_t2a(t2a, obj, *args, default_func=None, **kwargs):
     '''
         t2a: type2action dictionary for the various 'obj' types
     '''
@@ -26,7 +27,8 @@ def apply_match_t2a(t2a, obj, default=None, *args, **kwargs):
         tkey = f'{tobj.__module__}.{tobj.__name__}'
     else:
         print (f'apply_match: not found {tobj} key')
-        return default(obj, *args, **kwargs)     
+        assert default_func, 'no default type handler'
+        return default_func(obj, *args, **kwargs)     
     
     func = t2a[tkey]
     if isinstance(func, staticmethod):
@@ -39,5 +41,28 @@ def apply_match_t2a(t2a, obj, default=None, *args, **kwargs):
 def apply_match(klass, obj, *args, **kwargs):
     #print(f'from_obj: {obj}, {type(obj)}')
     t2a = klass.type2action
-    return apply_match_t2a(t2a, obj, default=klass.default_func, *args, **kwargs)
+    default_func = getattr(klass, 'default_func', None)
+    return apply_match_t2a(t2a, obj, *args, default_func=default_func, **kwargs)
 
+
+def pair_items(items: 'iterator', shape_args: 'list', sample=False):
+    '''
+    pair some or all items from <items> with <shape_args>
+    '''
+    res, err = None, None
+
+    if sample:
+        item = next(iter(items))
+        if len(item) != len(shape_args):
+            return None, f'shape mismatch: {item}, {shape_args}'
+        res = zip(item, shape_args)
+    else:
+        pairs = []
+        for item in items:
+            if len(item) != len(shape_args):
+                return None, f'shape mismatch: {item}, {shape_args}'
+            else:
+                pairs.append(zip(item, shape_args))
+        res = chain.from_iterable(pairs)
+
+    return res, err

@@ -1,8 +1,8 @@
 
-from .utils import apply_match
-from .aos import AndTuple, AOop
+from .utils import apply_match, pair_items
+from .aos import AOop
 from collections import defaultdict
-from .common import Config, OrVals
+from .common import Config, OrVals, AndTuple
 DEBUG = Config.DEBUG
 
 class AndSplitter():
@@ -13,10 +13,18 @@ class AndSplitter():
         if len(shape_args) == 2:
             k, v = shape_args
             k = k.get_dim_name()
-            if k in obj:
-                res = [(obj[k], v)]
+            if k not in obj:
+                keys = obj.keys()
+                if len(keys) != 1:
+                    err = f'bind infeasible to multiple keys {keys}'
+                else:
+                    res = []
+                    for obj_k, obj_v in obj.items():
+                        res.extend([(obj_k, k), (obj_v, v)])
             else:
-                err = f'bind infeasible (no field [{k}], {type(k)}): {obj}, {shape_args}'
+                obj_v = obj[k]
+                res = [(obj_v, v)]
+
         else:
             err = f'bind infeasible: more than 2 args for AND \n{obj}\n{shape_args}'
         return res, err
@@ -73,8 +81,21 @@ class SeqSplitter():
             res = [(x, shape_args[0]) for x in obj]
         return res, err
 
+    def from_dict(obj, shape, **kwargs):
+        res, err = None, None
+        shape_args = shape.args
+        if len(shape_args) != 1:
+            err = f'bind infeasible, multiple args: ({shape_args})'
+        else:
+            arg = shape_args[0]
+            #convert dict to list of AndTuples
+            res = [(AndTuple((k,v)), arg) for k, v in obj.items()]
+
+        return res, err
+
     type2action = {
-        list: from_list
+        list: from_list,
+        dict: from_dict
     }
 
 def bind_dim(obj, shape):

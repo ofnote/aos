@@ -42,13 +42,7 @@ class AOConst(NamedTuple):
     def is_ellipsis(s: str):
         return s == AOConst().ELLIPSIS
 
-#from typing import NewType
-#AndTuple = NewType('AndTuple', tuple)
-class AndTuple(tuple):
-    
-    def __repr__(self):
-        s = super().__repr__()
-        return f'`{s}`'
+
 
 
 '''
@@ -87,6 +81,7 @@ class AOShape(NamedTuple):
     def get_dim_name(self):
         assert self.dim is not None
         return self.dim.name.strip()
+
 
     @staticmethod
     def build_from(op, args):

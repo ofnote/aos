@@ -1,19 +1,20 @@
 
 from .utils import apply_match
-from .aos import AndTuple, AOop
-from .common import Config, OrVals
+from .aos import AOop
+from .common import Config, OrVals, AndTuple
 import itertools
 from collections import ChainMap
 
 DEBUG = Config.DEBUG
 II = isinstance
 
-
 def get_res_err_from_tuples(res_err_n):
     #print ('**get: ', res_err_n, len(res_err_n))
     res = [x[0] for x in res_err_n]
     err = [x[1] for x in res_err_n if x[1] is not None]
     err = list(itertools.chain(*err)) #TODO: fix
+    if not err:
+        err = None
     return res, err
 
 def pair_lists(A, B):
@@ -72,31 +73,27 @@ def eval_and(shape, contexts, colon=False):
 def eval_colon(shape, contexts):
     return eval_and(shape, contexts, colon=True)
 
-def or_simplify (res):
-    # list of AndTuple -> dict
-    for x in res:
-        if not II(x, AndTuple): return res
-        #z = dict(x)
-    res = dict(res)
-    return res
 
 def eval_or(shape, contexts, simplify_or=False):
     shape_args = shape.args
     #assert len(shape_args) == 2, f'eval_or: only handling 2 args: {shape_args}'
     res_err_n = [eval_aos_in_context(arg, contexts) for arg in shape_args]
     res, err = get_res_err_from_tuples(res_err_n)
+    if DEBUG: print (f'eval_or: from children: res:{res}, \n err:{err}')
 
     if not err:
         #assert each element of res is a list
         #res = list(itertools.chain(*res))
         #assert each element of list is a dict
+        if isinstance(res[0], OrVals):
+            res = OrVals.merge(res)
         if DEBUG:
             print(f'eval_or: {shape}, {contexts}')
             print (f'eval_or - res: {res}')
         
         
         if simplify_or:
-            res = or_simplify(res)
+            res = res.simplify()
 
     else:
         res = None
@@ -118,7 +115,7 @@ def eval_seq(shape, contexts):
         res_n.append(res)
     '''
     res, err = eval_aos_in_context(arg, ctx)
-    assert err is None
+    assert err is None, err
     assert II(res, OrVals)
     #when OrVals hits a Seq, it becomes an ordinary list
     res_n = [x for x in res]

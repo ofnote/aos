@@ -1,5 +1,7 @@
-from .aos import AndTuple
 from itertools import chain
+
+from .common import AndTuple
+from .utils import pair_items
 
 class OrList():
     '''
@@ -34,28 +36,6 @@ class OrList():
 
 
 
-
-def pair_items(items: 'iterator', shape_args: 'list', sample=False):
-    '''
-    pair some or all items from <items> with <shape_args>
-    '''
-    res, err = None, None
-
-    if sample:
-        item = next(iter(items))
-        if len(item) != len(shape_args):
-            return None, f'shape mismatch: {item}, {shape_args}'
-        res = zip(item, shape_args)
-    else:
-        pairs = []
-        for item in items:
-            if len(item) != len(shape_args):
-                return None, f'shape mismatch: {item}, {shape_args}'
-            else:
-                pairs.append(zip(item, shape_args))
-        res = chain.from_iterable(pairs)
-
-    return res, err
 
 class AndMatcher():
     def for_dict(obj, shape_args, **kwargs):

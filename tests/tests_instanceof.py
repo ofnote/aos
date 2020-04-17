@@ -1,4 +1,4 @@
-from aos.checker import is_aos_shape
+from aos.checker import instanceof as aosii
 
 
 
@@ -10,35 +10,35 @@ def test_pyds():
     t1 = ('Google', 2001)
     t2 = (t1, d)
 
-    is_aos_shape(t2, '(str | int) | (str & str)')
+    aosii(t2, '(str | int) | (str & str)')
 
     tlist = [('a', 1), ('b', 2)]
-    is_aos_shape(tlist, '(str | int)*')
-    is_aos_shape(tlist, '(_ | _)*')
+    aosii(tlist, '(str | int)*')
+    aosii(tlist, '(_ | _)*')
 
-    is_aos_shape(t2, '(_ | _) | (str & _)*')
-    is_aos_shape(t2, '... | (str & _)')
-
-
+    aosii(t2, '(_ | _) | (str & _)*')
+    aosii(t2, '... | (str & _)')
 
 
-    is_aos_shape(t2, '(_ | _) | (str & int)')
+
+
+    aosii(t2, '(_ | _) | (str & int)')
 
 def test_pandas():
     d =  {'id': 'CS2_056', 'cost': 2, 'name': 'Tap'}
     df = pd.DataFrame([d])
 
-    is_aos_shape(df, '1 & (id | cost | name)')
+    aosii(df, '1 & (id | cost | name)')
 
 def test_numpy():
     #arr = np.array()
     arr = np.array([[1,2,3],[4,5,6]]) 
-    is_aos_shape(arr, '2 & 3')
+    aosii(arr, '2 & 3')
 
 def test_pytorch():
     #arr = np.array()
     arr = torch.tensor([[1,2,3],[4,5,6]])
-    is_aos_shape(arr, '2 & 3')
+    aosii(arr, '2 & 3')
 
 if __name__ == '__main__':
     import pandas as pd

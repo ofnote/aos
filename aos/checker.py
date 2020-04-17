@@ -4,10 +4,10 @@ from itertools import chain
 from .parser import parse_aos
 from .dim import DimSymbol, ContinuousDim, CategoricalDim, Dim
 from .aos import AOShape, AOop, AOConst
-from .aos import AndTuple
 from .type_matchers import OrList, AndMatcher
-from .utils import apply_match
-from .common import Config
+from .utils import apply_match, pair_items
+
+from .common import Config, AndTuple
 DEBUG = Config.DEBUG
 
 def as_or_list(obj):
@@ -131,11 +131,12 @@ def match_obj_shape(obj, shape) -> 'err':
 
     return err
 
-def is_aos_shape(arr, shape):
+def instanceof(arr, shape):
     if isinstance(shape, str):
         shape = parse_aos(shape)
     
-    print (f'\nchecking {arr} against {shape}')
+    if DEBUG:
+        print (f'\nchecking {arr} against {shape}')
 
     err = match_obj_shape(arr, shape)
     if err: 
@@ -143,3 +144,8 @@ def is_aos_shape(arr, shape):
         return False, err
     else:
         return True, None
+
+
+
+
+

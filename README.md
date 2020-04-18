@@ -13,9 +13,9 @@ Writing data pipelines involves complex data transformations over nested data, e
 
 `aos` is a compact, regex-like language for describing the shapes (schemas) of both homogeneous (tensors) and heterogeneous (dictionaries, tables) data, and combinations, independent of the specific data library. 
 
-* Based on a well-defined,**regex-like** algebra of data shapes.
-* **Validate** data against `aos` shapes anywhere: `aos.checker.instanceof`.
+* Based on an intuitive **regex-like** algebra of data shapes.
 * **Infer** `aos` shape from a data instance: `aos.infer.infer_aos`.
+* **Validate** data against `aos` shapes anywhere: `aos.checker.instanceof`.
 * **Transform** data using `aos` shapes, declaratively: `aos.tfm.do_tfm`.
 * Allows writing explicit data shapes, **inline** in code. In Python, use type annotations.
 * Write shapes for a variety of data conveniently -- Python native objects (`dict`, `list`, scalars), tensors (`numpy`,` pytorch`, `tf`), `pandas`,`hdf5`,`tiledb`,`xarray`,`struct-tensor`, etc.
@@ -26,24 +26,22 @@ Writing data pipelines involves complex data transformations over nested data, e
 
 ## Shape of Data ?
 
-How can we specify the structure of data compactly?
+Consider a few quick examples.
 
-- for scalar data, its shape is simply its type, e.g., `int`, ` float`, `str`, ...
+- the shape of scalar data is simply its type, e.g., `int`, ` float`, `str`, ...
 - for nested data, eg.  list of `int`s:  `(int)*`
 - for a dictionary of form `{'a': 3, b: 'hi'}` : shape is  `(a & int) | (b & str)`.
 
-We can describe shape of *arbitrary, nested* data with these `&`(and)- `|`(or) expressions. 
+Now, we can describe the shape of *arbitrary, nested* data with these `&`(and)- `|`(or) expressions. Intuitively, a list is an `or`-structure, a dictionary is an `or` of `and`s, a tensor is an `and`-structure, and so on.
 
-A list is an `or`-structure, a dictionary is an `or` of `and`s, a tensor is an `and`-structure, and so on.
+* Why is a `list` an or-structure? Ask: how do we *access* any value `v` in the `list`? Choose **some** index of the list, corresponding to the value `v`. 
+* Similarly, a `dictionary` is an or-and structure: we pick **one** of the *key*s, together (**and**) with its *value*.
+* In contrast, an n-dimensional `tensor` has an `and`-shape: we must choose indices from *all* the dimensions of the tensor to access a scalar value. 
+* In general, for a data structure, we *ask*: what choices must we make to access a scalar value?
 
-* Why is a `list` an or-structure? Think of how do we *access* a scalar value in the `list`. We need to pick **some** value from its indices to get to a value. 
-* Similarly, a `dictionary` is an or-and-structure: pick **one** of its keys to access the *sub-tree* values. In fact, we pick both the *key* **and** *value* together.
-* In contrast, an n-dimensional `tensor` has an `and`-shape: we must choose indices from *all* the dimensions of the tensor to *access* a scalar value. 
-* In general, for a data structure, we *ask*: what are the access paths to get to a scalar value?
+Thinking in terms of `and`-`or` shapes takes a bit of practice initially. Read more about the and-or expressions [here](docs/and-or-thinking.md).
 
-Thinking in terms of `and`-`or` shapes takes a bit of practice but proves to be very useful in making hidden shapes explicit. Read more about how to think in the and-or style [here](docs/and-or-thinking.md).
-
-#### More `aos` Examples
+#### More complex `aos` examples
 
 * Lists over shape `s` are denoted as `(s)*`.  Shorthand for `(s|..|s)`.
 * Dictionary: `(k1 & v1) | (k2 & v2) | ... | (kn & vn)` where `ki` and `vi` is the `i`th key and value.

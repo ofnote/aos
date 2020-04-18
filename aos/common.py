@@ -12,7 +12,7 @@ class AndTuple(tuple):
 def simplify_and2dict(obj):
     if isinstance(obj, AndTuple):
         k, v = obj
-        assert isinstance(k, str)
+        #assert isinstance(k, str)
         res = {k: simplify_and2dict(v)}
     elif isinstance(obj, dict):
         res = {k: simplify_and2dict(v) for k, v in obj.items()}

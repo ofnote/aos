@@ -33,6 +33,12 @@ d2 = {
     ]
 }
 
+
+dlist = []
+for i in range(100):
+    d2['id'] = i
+    dlist.append(d2.copy())
+
 def infer_json(fname):
     if not os.path.exists(fname):
         return
@@ -43,11 +49,13 @@ def infer_json(fname):
         print (r)
 
 def test():
-    Config.pprint_treelike = True
+    Config.pprint_treelike = False
     r = infer_aos(d1)
     print(r)
 
     print(infer_aos(d2))
+    print(infer_aos(dlist))
+
     # data obtained by executing 'run.py' from
     # https://github.com/karpathy/covid-sanity
     infer_json('data/jall.json')

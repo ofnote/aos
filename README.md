@@ -11,16 +11,16 @@ Writing data pipelines involves complex data transformations over nested data, e
 
 ---
 
-`aos` is a unified, compact language for describing the shapes of both homogeneous (tensors) and heterogeneous (dictionaries) data, and combinations, independent of the specific data library. 
+`aos` is a compact, regex-like language for describing the shapes (schemas) of both homogeneous (tensors) and heterogeneous (dictionaries, tables) data, and combinations, independent of the specific data library. 
 
 * Based on a well-defined (regex-like) **algebra** of data shapes.
-
+* **Validate** data against `aos` shapes anywhere: `aos.checker.instanceof`.
+* **Infer** `aos` shape from a data instance: `aos.infer.infer_aos`.
+* **Transform** data using `aos` shapes, declaratively: `aos.tfm.do_tfm`.
 * Allows writing explicit data shapes, **inline** in code. In Python, use type annotations.
-
-* Validate concrete data against `aos` shapes anywhere via **assertions**: `aos.is_aos_shape`.
-
 * Write shapes for a variety of data conveniently -- Python native objects (`dict`, `list`, scalars), tensors (`numpy`,` pytorch`, `tf`), `pandas`,`hdf5`,`tiledb`,`xarray`,`struct-tensor`, etc.
 
+###Installation
 
 ```pip install aos```
 
@@ -53,7 +53,8 @@ The `aos` expressions let you write object shapes very *compactly*. For example,
 
  `Sequence[Tuple[Tuple[str, int], Dict[str, str]]]`  
 
-This is both verbose and hard to interpret. Instead, `X`'s `aos` is written compactly as `((str|int) | (str : str))* `.
+This is both verbose and hard to interpret. Instead, `X`'s `aos` is written compactly as
+ `((str|int) | (str : str))* `.
 
 > Writing full shapes of data variables may get cumbersome. To keep it brief, the language supports wildcards: `_` and `...` . 
 >
@@ -61,73 +62,123 @@ This is both verbose and hard to interpret. Instead, `X`'s `aos` is written comp
 
 
 
-## Shape Validation Examples
+## Shape Inference
 
-Using `aos.is_aos_shape`, we can write `aos` assertions to validate data shapes. 
+Unearthing the shape of opaque data instances, e.g., returned from a web request, or passed into a function call, is a major pain. 
 
-The language allows *lazy* shape specifications using placeholders:  `_` matches a scalar, `...` matches an arbitrary object.
+* Use `aos.infer.infer_aos` to obtain compact shapes of arbitrary data instances.
+* From command line, `aos-infer <filename.json>`
 
 ```python
-from aos import is_aos_shape
+from aos.infer import infer_aos
+
+def test_infer():
+  d = {
+      "checked": False,
+      "dimensions": { "width": 5, "height": 10},
+      "id": 1,
+      "name": "A green door",
+      "price": 12.5,
+      "tags": ["home","green"]
+  }
+	infer_aos(d) 
+  # ((checked & bool) 
+  # | (dimensions & ((width & int) | (height & int)))
+  # | (id & int) | (name & str) | (price & float) | (tags & (str *)))
+  
+  dlist = []
+  for i in range(100):
+      d['id'] = i
+      dlist.append(d.copy())
+      
+  infer_aos(dlist) 
+
+  # ((checked & bool) 
+  # | (dimensions & ((width & int) | (height & int)))
+  # | (id & int) | (name & str) | (price & float) | (tags & (str *)))*
+
+
+```
+
+
+
+## Shape/Schema Validation Examples
+
+Using `aos.checker.instanceof`, we can 
+
+* write `aos` assertions to validate data shapes (schemas). 
+* validate data structure partially using placeholders:  `_` matches a scalar, `...` matches an arbitrary object (sub-tree).
+* works with python objects, pandas, numpy, ..., extensible to other data types (libraries).
+
+```python
+from aos.checker import instanceof
 
 def test_pyobj():
     d = {'city': 'New York', 'country': 'USA'}
     t1 = ('Google', 2001)
     t2 = (t1, d)
 
-    is_aos_shape(t2, '(str | int) | (str & str)')
-
+    instanceof(t2, '(str | int) | (str & str)') #valid
+    instanceof(t2, '... | (str & _)') #valid
+    instanceof(t2, '(_ | _) | (str & int)') #error
+    
     tlist = [('a', 1), ('b', 2)]
-    is_aos_shape(tlist, '(str | int)*')
-    is_aos_shape(tlist, '(_ | _)*')
-
-    is_aos_shape(t2, '(_ | _) | (str & _)*')
-    is_aos_shape(t2, '... | (str & _)')
-
-    is_aos_shape(t2, '(_ | _) | (str & int)') #error
+    instanceof(tlist, '(str | int)*') #valid
 
 def test_pandas():
     d =  {'id': 'CS2_056', 'cost': 2, 'name': 'Tap'}
     df = pd.DataFrame([d.items()], columns=list(d.keys()) )
 
-    is_aos_shape(df, '1 & (id | cost | name)')
+    instanceof(df, '1 & (id | cost | name)')
 
 def test_numpy():
     #arr = np.array()
     arr = np.array([[1,2,3],[4,5,6]]) 
-    is_aos_shape(arr, '2 & 3')
+    instanceof(arr, '2 & 3')
 
 def test_pytorch():
     #arr = np.array()
     arr = torch.tensor([[1,2,3],[4,5,6]])
-    is_aos_shape(arr, '2 & 3')
+    instanceof(arr, '2 & 3')
 ```
 
 
 
-## And-Or Shape Transformations
+## Transformations with AOS
 
-Because `aos` expressions can both *match* and *specify* heterogeneous data, we can write transformation rules using `aos` to manipulate and transform data.
+Because `aos` expressions can both *match* and *specify* heterogeneous data shapes, we can write transformation rules using `aos` to manipulate and **transform** data. 
+
+The rules are written as `lhs -> rhs`, where both `lhs` and `rhs` are `aos` expressions:
+
+* `lhs` *matches* a part (sub-tree) of the input data instance *I*. 
+* *query* variables in the `lhs` *capture* (bind with) parts of *I*.
+* `rhs` specifies the expected shape (aos) of the output data instance *O*.
+* Think: what *parts* from *I* do we need to construct *O* ?
 
 ```python
-def test1():
-    # original data
-    a = {'items': [
-            {'k': 1}, {'k': 2}, {'k': 3}
-        ]}
+from aos.tfm import do_tfm
+def tfm_example():
+    # input data
+    I = {'items': [{'k': 1}, {'k': 2}, {'k': 3}],
+        'names': ['A', 'B', 'C']}
 
     # specify transformation (left aos -> right aos)
     # using `query` variables `k` and `v`
     
-    tfm = 'items & (k & v)* -> (v)*'
+    # here `k` binds with each of the keys in the list and 
+    # `v` binds with the corresponding value
+    
+    tfm = 'items & (k & v)* -> values & (v)*'
 
-    b = do_tfm(a, tfm)
-    print(b) # [1, 2, 3]
+    O = do_tfm(I, tfm)
+    print(O) # {'values': [1, 2, 3]}
 ```
 
 
 
-See more examples [here](tests/test_tfm.py).
+The above example illustrates a simple JSON transformation using `aos` rules. Rules can be more complex, e.g., include *conditions*, *function* application on query variables. They work not only with JSON data, but also apply to heterogeneous nested objects.
+
+See more examples [here](tests/test_tfm_json.py) and [here](tests/test_tfm_spark_json.py). 
 
 
 
@@ -146,7 +197,9 @@ Data is defined over two kinds of dimensions:
 
 
 
-*More details coming soon...*
+## Status
+
+*The library is under active development. More documentation coming soon..*
 
 
 

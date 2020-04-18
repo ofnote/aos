@@ -30,7 +30,7 @@ def to_AndTuple(k, v):
 def and_simplify(key, vals):
     # moving OrVals up the result expression
     if II(key, OrVals) and not II(vals, OrVals):
-        print (key)
+        #print (key)
         res = OrVals([to_AndTuple(k, vals) for k in key])
     elif not II(key, OrVals) and II(vals, OrVals):
         res = OrVals([to_AndTuple(key, v) for v in vals])
@@ -54,7 +54,7 @@ def eval_and(shape, contexts, colon=False):
         if colon:
             assert II(key, OrVals), f'{key}'
             res = and_simplify(key, vals)
-            print(res)
+            #print(res)
             res = dict(res)
         else:
             res = and_simplify(key, vals)

@@ -13,14 +13,14 @@ Writing data pipelines involves complex data transformations over nested data, e
 
 `aos` is a compact, regex-like language for describing the shapes (schemas) of both homogeneous (tensors) and heterogeneous (dictionaries, tables) data, and combinations, independent of the specific data library. 
 
-* Based on a well-defined (regex-like) **algebra** of data shapes.
+* Based on a well-defined,**regex-like** algebra of data shapes.
 * **Validate** data against `aos` shapes anywhere: `aos.checker.instanceof`.
 * **Infer** `aos` shape from a data instance: `aos.infer.infer_aos`.
 * **Transform** data using `aos` shapes, declaratively: `aos.tfm.do_tfm`.
 * Allows writing explicit data shapes, **inline** in code. In Python, use type annotations.
 * Write shapes for a variety of data conveniently -- Python native objects (`dict`, `list`, scalars), tensors (`numpy`,` pytorch`, `tf`), `pandas`,`hdf5`,`tiledb`,`xarray`,`struct-tensor`, etc.
 
-###Installation
+### Installation
 
 ```pip install aos```
 
@@ -67,12 +67,13 @@ This is both verbose and hard to interpret. Instead, `X`'s `aos` is written comp
 Unearthing the shape of opaque data instances, e.g., returned from a web request, or passed into a function call, is a major pain. 
 
 * Use `aos.infer.infer_aos` to obtain compact shapes of arbitrary data instances.
-* From command line, `aos-infer <filename.json>`
+* From command line, run `aos-infer <filename.json>`
 
 ```python
 from aos.infer import infer_aos
 
 def test_infer():
+
   d = {
       "checked": False,
       "dimensions": { "width": 5, "height": 10},
@@ -81,7 +82,9 @@ def test_infer():
       "price": 12.5,
       "tags": ["home","green"]
   }
-	infer_aos(d) 
+
+  infer_aos(d) 
+
   # ((checked & bool) 
   # | (dimensions & ((width & int) | (height & int)))
   # | (id & int) | (name & str) | (price & float) | (tags & (str *)))
@@ -102,7 +105,7 @@ def test_infer():
 
 
 
-## Shape/Schema Validation Examples
+## Shape/Schema Validation
 
 Using `aos.checker.instanceof`, we can 
 
@@ -146,14 +149,14 @@ def test_pytorch():
 
 ## Transformations with AOS
 
-Because `aos` expressions can both *match* and *specify* heterogeneous data shapes, we can write transformation rules using `aos` to manipulate and **transform** data. 
+Because `aos` expressions can both *match* and *specify* heterogeneous data shapes, we can write `aos` **rules** to **transform** data. 
 
 The rules are written as `lhs -> rhs`, where both `lhs` and `rhs` are `aos` expressions:
 
 * `lhs` *matches* a part (sub-tree) of the input data instance *I*. 
-* *query* variables in the `lhs` *capture* (bind with) parts of *I*.
+* `query` variables in the `lhs` *capture* (bind with) parts of *I*.
 * `rhs` specifies the expected shape (aos) of the output data instance *O*.
-* Think: what *parts* from *I* do we need to construct *O* ?
+* To write rules, ask: which *parts* from *I* do we need to construct *O* ?
 
 ```python
 from aos.tfm import do_tfm
@@ -184,7 +187,7 @@ See more examples [here](tests/test_tfm_json.py) and [here](tests/test_tfm_spark
 
 ## And-Or Shape Dimensions
 
-The above examples of use type names (`str`) or integer values (`2`,`3`) in shapes. A more principled approach is to first declare **dimension names** and define shape over these names. 
+The above examples of use strings or type names (`str`) or integer values (`2`,`3`) in shape expressions. A more principled approach is to first declare **dimension names** and define shape over these names. 
 
 Data is defined over two kinds of dimensions:
 

@@ -47,14 +47,14 @@ Thinking in terms of `and`-`or` shapes takes a bit of practice initially. Read m
 * Dictionary: `(k1 & v1) | (k2 & v2) | ... | (kn & vn)` where `ki` and `vi` is the `i`th key and value.
 * Pandas tables: `(n & ( (c1&int)| (c2&str) | ... | (cn&str) )` where `n` is the row dimension (the number of rows) and `c1,...,cn` are column names.
 
-The `aos` expressions let you write object shapes very *compactly*. For example, consider a highly nested Python object `X` of type
+The `aos` expressions are very *compact*. For example, consider a highly nested Python object `X` of type
 
  `Sequence[Tuple[Tuple[str, int], Dict[str, str]]]`  
 
 This is both verbose and hard to interpret. Instead, `X`'s `aos` is written compactly as
  `((str|int) | (str : str))* `.
 
-> Writing full shapes of data variables may get cumbersome. To keep it brief, the language supports wildcards: `_` and `...` . 
+> The full data shape may be irrelevant in many cases. To keep it brief, the language supports wildcards: `_` and `...` to allow writing partial shapes. 
 >
 > So, we could write a dictionary's shape as `(k1 & ...)| ... | (kn & ...)`.
 
@@ -154,7 +154,8 @@ The rules are written as `lhs -> rhs`, where both `lhs` and `rhs` are `aos` expr
 * `lhs` *matches* a part (sub-tree) of the input data instance *I*. 
 * `query` variables in the `lhs` *capture* (bind with) parts of *I*.
 * `rhs` specifies the expected shape (aos) of the output data instance *O*.
-* To write rules, ask: which *parts* from *I* do we need to construct *O* ?
+
+To write rules, ask: which *parts* of *I*, do we need to construct *O* ?
 
 ```python
 from aos.tfm import do_tfm
@@ -168,6 +169,7 @@ def tfm_example():
     
     # here `k` binds with each of the keys in the list and 
     # `v` binds with the corresponding value
+    # the `lhs` automatically ignores parts of I, which are irrelevant to O
     
     tfm = 'items & (k & v)* -> values & (v)*'
 

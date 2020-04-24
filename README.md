@@ -2,9 +2,9 @@
 
 # And-Or Shape (aos) Language
 
-<img src="./docs/aos-trees.png" alt="Data as Trees" width="400px" />
+<img src="./docs/aos-trees.png" alt="Data as Trees" width="500px" />
 
-Writing data pipelines involves complex data transformations over nested data, e.g., list of dictionaries or dictionary of tensors. 
+Writing data pipelines involves complex data transformations over *nested* data, e.g., list of dictionaries or dictionary of tensors. 
 
 - The *shape* of nested data is not explicit in code and hence not accessible readily to the developer.
 - Leads to cognitive burden (guessing shapes), technical debt and inadvertent programming errors.
@@ -12,7 +12,7 @@ Writing data pipelines involves complex data transformations over nested data, e
 
 ---
 
-`aos` is a compact, regex-like language for describing the shapes (schemas) of both homogeneous (tensors) and heterogeneous (dictionaries, tables) data, and combinations, independent of the specific data library. 
+`aos` is a compact, regex-like language for describing the *shapes* (schemas) of both *homogeneous* (tensors) and *heterogeneous* (dictionaries, tables) data, and combinations, independent of the specific data library. 
 
 * Based on an intuitive **regex-like** algebra of data shapes.
 * [**Infer**](#Shape-Inference) `aos` shape from a data instance: `aos.infer.infer_aos`.

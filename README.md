@@ -2,6 +2,7 @@
 
 # And-Or Shape (aos) Language
 
+<img src="./docs/aos-trees.png" alt="Data as Trees" style="zoom:30%;" />
 
 Writing data pipelines involves complex data transformations over nested data, e.g., list of dictionaries or dictionary of tensors. 
 
@@ -19,6 +20,10 @@ Writing data pipelines involves complex data transformations over nested data, e
 * **Transform** data using `aos` shapes, declaratively: `aos.tfm.do_tfm`.
 * Allows writing explicit data shapes, **inline** in code. In Python, use type annotations.
 * Write shapes for a variety of data conveniently -- Python native objects (`dict`, `list`, scalars), tensors (`numpy`,` pytorch`, `tf`), `pandas`,`hdf5`,`tiledb`,`xarray`,`struct-tensor`, etc.
+
+An **article** on *aos* is [here](https://medium.com/@ekshakhs/aos-wrangle-nested-data-with-regular-exprs-5510a27bab13).
+
+
 
 ### Installation
 

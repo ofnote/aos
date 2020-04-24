@@ -1,5 +1,9 @@
 ## Thinking And-Or Style
 
+![Data as Trees](./aos-trees.png)
+
+---
+
 Machine Learning data pipelines comprise of two main data structures: *tables* and *tensors* (n-d arrays). For example, in Python, we can use `pandas` and `numpy` libraries to work with tables and tensors, respectively. Let's see how we can describe their shapes in the `aos` language in a unified manner.
 
 Suppose `T` is a 4-dimensional tensor corresponding to a *batch* of images: each image has height `h`, width `w`, number of channels `c` and the batch has `b` elements.

@@ -2,7 +2,7 @@
 
 # And-Or Shape (aos) Language
 
-<img src="./docs/aos-trees.png" alt="Data as Trees" style="zoom:30%;" />
+<img src="./docs/aos-trees.png" alt="Data as Trees" width="400px" />
 
 Writing data pipelines involves complex data transformations over nested data, e.g., list of dictionaries or dictionary of tensors. 
 
@@ -15,9 +15,9 @@ Writing data pipelines involves complex data transformations over nested data, e
 `aos` is a compact, regex-like language for describing the shapes (schemas) of both homogeneous (tensors) and heterogeneous (dictionaries, tables) data, and combinations, independent of the specific data library. 
 
 * Based on an intuitive **regex-like** algebra of data shapes.
-* **Infer** `aos` shape from a data instance: `aos.infer.infer_aos`.
-* **Validate** data against `aos` shapes anywhere: `aos.checker.instanceof`.
-* **Transform** data using `aos` shapes, declaratively: `aos.tfm.do_tfm`.
+* [**Infer**](#Shape-Inference) `aos` shape from a data instance: `aos.infer.infer_aos`.
+* [**Validate**](#shapeschema-validation) data against `aos` shapes anywhere: `aos.checker.instanceof`.
+* [**Transform**](#transformations-with-aos) data using `aos` shapes, declaratively: `aos.tfm.do_tfm`.
 * Allows writing explicit data shapes, **inline** in code. In Python, use type annotations.
 * Write shapes for a variety of data conveniently -- Python native objects (`dict`, `list`, scalars), tensors (`numpy`,` pytorch`, `tf`), `pandas`,`hdf5`,`tiledb`,`xarray`,`struct-tensor`, etc.
 

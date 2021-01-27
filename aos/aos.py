@@ -78,8 +78,11 @@ class AOShape(NamedTuple):
     '*': AOop.SEQUENCE
     }
 
+    def is_dim(self):
+        return self.dim is not None
+
     def get_dim_name(self):
-        assert self.dim is not None
+        assert self.is_dim()
         return self.dim.name.strip()
 
 
@@ -233,14 +236,6 @@ def get_or_decl_dims(names):
     res = [get_or_decl_dim(name) for name in names]
     if len(names) == 1: return res[0]
     else: return res
-
-
-def show_dims(names):
-    names = names.strip().split(' ')
-    res = [str(DimSymbol.lookup(name)) for name in names]
-    return '\n'.join(res)
-
-
 
 
 

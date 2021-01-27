@@ -83,3 +83,20 @@ class CategoricalDim(DimSymbol):
 from typing import Union
 
 Dim = Union[ContinuousDim, CategoricalDim]
+
+def show_dims(names):
+    names = names.strip().split(' ')
+    res = [str(DimSymbol.lookup(name)) for name in names]
+    return '\n'.join(res)
+
+def is_scalar(obj):
+    return isinstance(obj, (str, int, float, bool))
+
+def is_dim(obj):
+    if isinstance(obj, (ContinuousDim, CategoricalDim)): return True
+    if isinstance(obj, str):
+        return (DimSymbol.lookup(obj, hard=False) is not None)
+    return False
+
+def is_dim_or_scalar(obj):
+    return is_scalar(obj) or is_dim(obj)
